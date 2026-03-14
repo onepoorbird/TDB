@@ -1,0 +1,366 @@
+syntax = "proto3";
+package memory.proto;
+option go_package="github.com/milvus-io/milvus/pkg/v2/proto/memorypb";
+
+import "common.proto";
+import "schema.proto";
+
+// MemoryType 记忆类型
+enum MemoryType {
+    MEMORY_UNKNOWN = 0;
+    EPISODIC = 1;       // 情景记忆：发生过什么
+    SEMANTIC = 2;       // 语义记忆：抽象事实与知识
+    PROCEDURAL = 3;     // 程序记忆：规则、流程、策略
+    SOCIAL = 4;         // 社交/共享记忆：共享约定、团队状态
+    REFLECTIVE = 5;     // 反思记忆：反思、修正、经验结论
+}
+
+// MemoryLevel 记忆蒸馏层级
+enum MemoryLevel {
+    LEVEL_UNKNOWN = 0;
+    LEVEL_RAW = 1;      // 原始记录
+    LEVEL_SUMMARY = 2;  // 摘要
+    LEVEL_PATTERN = 3;  // 归纳规律
+}
+
+// MemoryState 记忆状态
+enum MemoryState {
+    MEMORY_STATE_UNKNOWN = 0;
+    MEMORY_ACTIVE = 1;
+    MEMORY_FADING = 2;
+    MEMORY_ARCHIVED = 3;
+    MEMORY_QUARANTINED = 4;
+    MEMORY_DELETED = 5;
+}
+
+// Memory 记忆对象
+message Memory {
+    string memory_id = 1;
+    MemoryType memory_type = 2;
+    string agent_id = 3;
+    string session_id = 4;
+    string scope = 5;
+    MemoryLevel level = 6;
+    
+    // 内容
+    string content = 7;
+    string summary = 8;
+    repeated string source_event_ids = 9;
+    
+    // 质量指标
+    float confidence = 10;
+    float importance = 11;
+    float freshness_score = 12;
+    
+    // 生命周期
+    int64 ttl = 13;  // 存活时间（秒）
+    uint64 valid_from = 14;
+    uint64 valid_to = 15;
+    
+    // 溯源
+    string provenance_ref = 16;
+    
+    // 版本
+    int64 version = 17;
+    bool is_active = 18;
+    MemoryState state = 19;
+    
+    // 时间戳
+    uint64 created_ts = 20;
+    uint64 updated_ts = 21;
+    
+    // 元数据
+    map<string, string> metadata = 22;
+    
+    // 向量引用（实际向量存储在Milvus中）
+    string embedding_ref = 23;
+    repeated float embedding_vector = 24;
+}
+
+// MemoryPolicy 记忆策略（Policy Layer）
+message MemoryPolicy {
+    string memory_id = 1;
+    
+    // 显著性权重
+    float salience_weight = 2;
+    
+    // TTL策略
+    int64 ttl = 3;
+    string decay_fn = 4;  // "linear", "exponential", "step"
+    
+    // 置信度
+    float confidence = 5;
+    
+    // 验证状态
+    bool verified = 6;
+    string verified_by = 7;
+    uint64 verified_at = 8;
+    
+    // 隔离状态
+    bool quarantined = 9;
+    string quarantine_reason = 10;
+    
+    // 可见性策略
+    string visibility_policy = 11;
+    
+    // ACL
+    repeated string read_acl = 12;
+    repeated string write_acl = 13;
+    repeated string derive_acl = 14;
+    
+    // 策略来源
+    string policy_reason = 15;
+    string policy_source = 16;
+    string policy_event_id = 17;
+    
+    // 时间戳
+    uint64 created_ts = 18;
+    uint64 updated_ts = 19;
+}
+
+// MemoryAdaptation 记忆适配（Adaptation Layer）
+message MemoryAdaptation {
+    string memory_id = 1;
+    
+    // 检索配置
+    map<string, float> retrieval_profile = 2;
+    
+    // 排序参数
+    map<string, float> ranking_params = 3;
+    
+    // 过滤阈值
+    map<string, float> filtering_thresholds = 4;
+    
+    // 投影权重
+    map<string, float> projection_weights = 5;
+    
+    // 嵌入模型选择
+    string embedding_family = 6;
+    string model_id = 7;
+    
+    // 适配来源
+    string adaptation_reason = 8;
+    string adaptation_source = 9;
+    
+    // 时间戳
+    uint64 created_ts = 10;
+    uint64 updated_ts = 11;
+}
+
+// State 状态对象
+message State {
+    string state_id = 1;
+    string agent_id = 2;
+    string session_id = 3;
+    string state_type = 4;
+    string state_key = 5;
+    bytes state_value = 6;
+    int64 version = 7;
+    string derived_from_event_id = 8;
+    uint64 checkpoint_ts = 9;
+    uint64 created_ts = 10;
+    uint64 updated_ts = 11;
+    map<string, string> metadata = 12;
+}
+
+// Artifact 外部工件
+message Artifact {
+    string artifact_id = 1;
+    string session_id = 2;
+    string owner_agent_id = 3;
+    string artifact_type = 4;
+    string uri = 5;
+    string content_ref = 6;
+    string mime_type = 7;
+    map<string, string> metadata = 8;
+    string hash = 9;
+    string produced_by_event_id = 10;
+    int64 version = 11;
+    uint64 created_ts = 12;
+}
+
+// Relation 关系/边
+message Relation {
+    string edge_id = 1;
+    string src_object_id = 2;
+    string src_type = 3;  // "memory", "event", "state", "artifact"
+    string dst_object_id = 4;
+    string dst_type = 5;
+    string relation_type = 6;  // "caused_by", "derived_from", "supports", "contradicts", "summarizes", "updates", "uses_tool", "belongs_to_task", "shared_with"
+    float weight = 7;
+    map<string, string> properties = 8;
+    uint64 created_ts = 9;
+    string created_by_event_id = 10;
+}
+
+// CreateMemoryRequest 创建记忆请求
+message CreateMemoryRequest {
+    string tenant_id = 1;
+    string workspace_id = 2;
+    string agent_id = 3;
+    string session_id = 4;
+    MemoryType memory_type = 5;
+    string scope = 6;
+    string content = 7;
+    string summary = 8;
+    repeated string source_event_ids = 9;
+    float confidence = 10;
+    float importance = 11;
+    int64 ttl = 12;
+    map<string, string> metadata = 13;
+    repeated float embedding_vector = 14;
+}
+
+// CreateMemoryResponse 创建记忆响应
+message CreateMemoryResponse {
+    common.Status status = 1;
+    string memory_id = 2;
+    uint64 version = 3;
+}
+
+// GetMemoryRequest 获取记忆请求
+message GetMemoryRequest {
+    string memory_id = 1;
+    uint64 version = 2;  // 0表示最新版本
+    uint64 timestamp = 3;  // 时间旅行查询
+}
+
+// GetMemoryResponse 获取记忆响应
+message GetMemoryResponse {
+    common.Status status = 1;
+    Memory memory = 2;
+    MemoryPolicy policy = 3;
+    MemoryAdaptation adaptation = 4;
+}
+
+// UpdateMemoryRequest 更新记忆请求
+message UpdateMemoryRequest {
+    string memory_id = 1;
+    string content = 2;
+    string summary = 3;
+    float confidence = 4;
+    float importance = 5;
+    int64 ttl = 6;
+    map<string, string> metadata = 7;
+    repeated float embedding_vector = 8;
+}
+
+// UpdateMemoryResponse 更新记忆响应
+message UpdateMemoryResponse {
+    common.Status status = 1;
+    uint64 new_version = 2;
+}
+
+// DeleteMemoryRequest 删除记忆请求
+message DeleteMemoryRequest {
+    string memory_id = 1;
+    bool hard_delete = 2;  // false表示软删除
+}
+
+// DeleteMemoryResponse 删除记忆响应
+message DeleteMemoryResponse {
+    common.Status status = 1;
+}
+
+// MemoryFilter 记忆过滤条件
+message MemoryFilter {
+    repeated string agent_ids = 1;
+    repeated string session_ids = 2;
+    repeated MemoryType memory_types = 3;
+    repeated MemoryLevel levels = 4;
+    repeated MemoryState states = 5;
+    string scope = 6;
+    uint64 start_time = 7;
+    uint64 end_time = 8;
+    float min_confidence = 9;
+    float min_importance = 10;
+    map<string, string> metadata_filter = 11;
+}
+
+// QueryMemoriesRequest 查询记忆请求
+message QueryMemoriesRequest {
+    MemoryFilter filter = 1;
+    int64 limit = 2;
+    int64 offset = 3;
+    string order_by = 4;
+    bool ascending = 5;
+}
+
+// QueryMemoriesResponse 查询记忆响应
+message QueryMemoriesResponse {
+    common.Status status = 1;
+    repeated Memory memories = 2;
+    int64 total_count = 3;
+}
+
+// SearchMemoriesRequest 向量搜索记忆请求
+message SearchMemoriesRequest {
+    string tenant_id = 1;
+    string workspace_id = 2;
+    repeated float query_vector = 3;
+    int64 top_k = 4;
+    MemoryFilter filter = 5;
+    float min_score = 6;
+}
+
+// SearchResult 搜索结果
+message SearchResult {
+    Memory memory = 1;
+    float score = 2;
+    string explanation = 3;
+}
+
+// SearchMemoriesResponse 向量搜索记忆响应
+message SearchMemoriesResponse {
+    common.Status status = 1;
+    repeated SearchResult results = 2;
+}
+
+// GetRelationsRequest 获取关系请求
+message GetRelationsRequest {
+    string object_id = 1;
+    string object_type = 2;
+    string relation_type = 3;
+    int64 hop = 4;
+}
+
+// GetRelationsResponse 获取关系响应
+message GetRelationsResponse {
+    common.Status status = 1;
+    repeated Relation relations = 2;
+}
+
+// CreateRelationRequest 创建关系请求
+message CreateRelationRequest {
+    string src_object_id = 1;
+    string src_type = 2;
+    string dst_object_id = 3;
+    string dst_type = 4;
+    string relation_type = 5;
+    float weight = 6;
+    map<string, string> properties = 7;
+    string created_by_event_id = 8;
+}
+
+// CreateRelationResponse 创建关系响应
+message CreateRelationResponse {
+    common.Status status = 1;
+    string edge_id = 2;
+}
+
+// MemoryService 记忆服务定义
+service MemoryService {
+    // 记忆CRUD
+    rpc CreateMemory(CreateMemoryRequest) returns (CreateMemoryResponse);
+    rpc GetMemory(GetMemoryRequest) returns (GetMemoryResponse);
+    rpc UpdateMemory(UpdateMemoryRequest) returns (UpdateMemoryResponse);
+    rpc DeleteMemory(DeleteMemoryRequest) returns (DeleteMemoryResponse);
+    rpc QueryMemories(QueryMemoriesRequest) returns (QueryMemoriesResponse);
+    
+    // 向量搜索
+    rpc SearchMemories(SearchMemoriesRequest) returns (SearchMemoriesResponse);
+    
+    // 关系操作
+    rpc GetRelations(GetRelationsRequest) returns (GetRelationsResponse);
+    rpc CreateRelation(CreateRelationRequest) returns (CreateRelationResponse);
+}

@@ -1,0 +1,243 @@
+syntax = "proto3";
+package governance.proto;
+option go_package="github.com/milvus-io/milvus/pkg/v2/proto/governancepb";
+
+import "common.proto";
+
+// ConsistencyLevel 一致性级别
+enum ConsistencyLevel {
+    CONSISTENCY_UNKNOWN = 0;
+    STRONG = 1;
+    BOUNDED_STALENESS = 2;
+    SESSION = 3;
+    EVENTUAL = 4;
+}
+
+// MergePolicy 合并策略
+enum MergePolicy {
+    MERGE_UNKNOWN = 0;
+    LAST_WRITER_WINS = 1;
+    CAUSAL_MERGE = 2;
+    WEIGHTED_MERGE = 3;
+    CRDT_MERGE = 4;
+}
+
+// ShareContract 共享契约
+message ShareContract {
+    string contract_id = 1;
+    string scope = 2;
+    string owner_agent_id = 3;
+    
+    // ACL
+    repeated string read_acl = 4;
+    repeated string write_acl = 5;
+    repeated string derive_acl = 6;
+    
+    // TTL策略
+    int64 ttl_policy = 7;
+    
+    // 一致性级别
+    ConsistencyLevel consistency_level = 8;
+    
+    // 合并策略
+    MergePolicy merge_policy = 9;
+    
+    // 隔离策略
+    bool quarantine_enabled = 10;
+    string quarantine_policy = 11;
+    
+    // 审计策略
+    bool audit_enabled = 12;
+    string audit_policy = 13;
+    
+    // 元数据
+    map<string, string> metadata = 14;
+    
+    // 时间戳
+    uint64 created_ts = 15;
+    uint64 updated_ts = 16;
+    string created_by_event_id = 17;
+}
+
+// Conflict 冲突信息
+message Conflict {
+    string conflict_id = 1;
+    string conflict_type = 2;  // "fact", "plan", "state"
+    string object_id = 3;
+    string object_type = 4;
+    repeated string conflicting_versions = 5;
+    repeated string conflicting_agents = 6;
+    string description = 7;
+    uint64 detected_at = 8;
+    ConflictState state = 9;
+}
+
+// ConflictState 冲突状态
+enum ConflictState {
+    CONFLICT_UNKNOWN = 0;
+    CONFLICT_DETECTED = 1;
+    CONFLICT_RESOLVING = 2;
+    CONFLICT_RESOLVED = 3;
+    CONFLICT_ESCALATED = 4;
+}
+
+// ConflictResolution 冲突解决结果
+message ConflictResolution {
+    string conflict_id = 1;
+    string resolution_strategy = 2;
+    string resolved_version = 3;
+    map<string, string> merge_details = 4;
+    string resolved_by = 5;
+    uint64 resolved_at = 6;
+}
+
+// AuditLog 审计日志
+message AuditLog {
+    string log_id = 1;
+    string tenant_id = 2;
+    string workspace_id = 3;
+    string agent_id = 4;
+    string session_id = 5;
+    string operation = 6;
+    string object_type = 7;
+    string object_id = 8;
+    string action = 9;  // "create", "read", "update", "delete", "share"
+    string details = 10;
+    uint64 timestamp = 11;
+    string source_ip = 12;
+    string user_identity = 13;
+    bool success = 14;
+    string error_message = 15;
+}
+
+// CreateShareContractRequest 创建共享契约请求
+message CreateShareContractRequest {
+    string tenant_id = 1;
+    string workspace_id = 2;
+    string scope = 3;
+    string owner_agent_id = 4;
+    repeated string read_acl = 5;
+    repeated string write_acl = 6;
+    repeated string derive_acl = 7;
+    int64 ttl_policy = 8;
+    ConsistencyLevel consistency_level = 9;
+    MergePolicy merge_policy = 10;
+    bool quarantine_enabled = 11;
+    string quarantine_policy = 12;
+    bool audit_enabled = 13;
+    string audit_policy = 14;
+    map<string, string> metadata = 15;
+}
+
+// CreateShareContractResponse 创建共享契约响应
+message CreateShareContractResponse {
+    common.Status status = 1;
+    string contract_id = 2;
+}
+
+// GetShareContractRequest 获取共享契约请求
+message GetShareContractRequest {
+    string contract_id = 1;
+}
+
+// GetShareContractResponse 获取共享契约响应
+message GetShareContractResponse {
+    common.Status status = 1;
+    ShareContract contract = 2;
+}
+
+// UpdateShareContractRequest 更新共享契约请求
+message UpdateShareContractRequest {
+    string contract_id = 1;
+    repeated string read_acl = 2;
+    repeated string write_acl = 3;
+    repeated string derive_acl = 4;
+    int64 ttl_policy = 5;
+    ConsistencyLevel consistency_level = 6;
+    MergePolicy merge_policy = 7;
+}
+
+// UpdateShareContractResponse 更新共享契约响应
+message UpdateShareContractResponse {
+    common.Status status = 1;
+}
+
+// DetectConflictRequest 检测冲突请求
+message DetectConflictRequest {
+    string object_id = 1;
+    string object_type = 2;
+}
+
+// DetectConflictResponse 检测冲突响应
+message DetectConflictResponse {
+    common.Status status = 1;
+    repeated Conflict conflicts = 2;
+}
+
+// ResolveConflictRequest 解决冲突请求
+message ResolveConflictRequest {
+    string conflict_id = 1;
+    string resolution_strategy = 2;
+    string preferred_version = 3;
+    map<string, float> version_weights = 4;
+}
+
+// ResolveConflictResponse 解决冲突响应
+message ResolveConflictResponse {
+    common.Status status = 1;
+    ConflictResolution resolution = 2;
+}
+
+// QueryAuditLogsRequest 查询审计日志请求
+message QueryAuditLogsRequest {
+    string tenant_id = 1;
+    string workspace_id = 2;
+    string agent_id = 3;
+    string object_type = 4;
+    string object_id = 5;
+    string action = 6;
+    uint64 start_time = 7;
+    uint64 end_time = 8;
+    int64 limit = 9;
+    int64 offset = 10;
+}
+
+// QueryAuditLogsResponse 查询审计日志响应
+message QueryAuditLogsResponse {
+    common.Status status = 1;
+    repeated AuditLog logs = 2;
+    int64 total_count = 3;
+}
+
+// CheckAccessRequest 检查访问权限请求
+message CheckAccessRequest {
+    string agent_id = 1;
+    string object_id = 2;
+    string object_type = 3;
+    string action = 4;  // "read", "write", "derive"
+}
+
+// CheckAccessResponse 检查访问权限响应
+message CheckAccessResponse {
+    common.Status status = 1;
+    bool allowed = 2;
+    string reason = 3;
+}
+
+// GovernanceService 治理服务定义
+service GovernanceService {
+    // 共享契约管理
+    rpc CreateShareContract(CreateShareContractRequest) returns (CreateShareContractResponse);
+    rpc GetShareContract(GetShareContractRequest) returns (GetShareContractResponse);
+    rpc UpdateShareContract(UpdateShareContractRequest) returns (UpdateShareContractResponse);
+    
+    // 冲突管理
+    rpc DetectConflict(DetectConflictRequest) returns (DetectConflictResponse);
+    rpc ResolveConflict(ResolveConflictRequest) returns (ResolveConflictResponse);
+    
+    // 审计日志
+    rpc QueryAuditLogs(QueryAuditLogsRequest) returns (QueryAuditLogsResponse);
+    
+    // 权限检查
+    rpc CheckAccess(CheckAccessRequest) returns (CheckAccessResponse);
+}

@@ -1,0 +1,243 @@
+syntax = "proto3";
+package milvus.proto.etcd;
+option go_package="github.com/milvus-io/milvus/pkg/v2/proto/etcdpb";
+
+import "common.proto";
+/*大部分定义如下：
+0=不知道
+1=创建中
+2=活跃中
+3=暂停中
+4=终止了*/
+// AgentState 定义Agent的状态
+enum AgentState {
+    AGENT_UNKNOWN = 0;
+    AGENT_CREATING = 1;
+    AGENT_ACTIVE = 2;
+    AGENT_PAUSED = 3;
+    AGENT_TERMINATED = 4;
+}
+
+// AgentInfo 存储在etcd中的Agent信息
+message AgentInfo {
+    string agent_id = 1;
+    string tenant_id = 2;
+    string workspace_id = 3;
+    string agent_type = 4;
+    string role_profile = 5;
+    string policy_ref = 6;
+    repeated string capability_set = 7;
+    string default_memory_policy = 8;
+    uint64 created_ts = 9;
+    uint64 updated_ts = 10;
+    AgentState state = 11;
+    map<string, string> metadata = 12;
+}
+
+// SessionState 定义Session的状态
+enum SessionState {
+    SESSION_UNKNOWN = 0;
+    SESSION_CREATING = 1;
+    SESSION_ACTIVE = 2;
+    SESSION_PAUSED = 3;
+    SESSION_COMPLETED = 4;
+    SESSION_FAILED = 5;
+}
+
+// SessionInfo 存储在etcd中的Session信息
+message SessionInfo {
+    string session_id = 1;
+    string agent_id = 2;
+    string parent_session_id = 3;
+    string task_type = 4;
+    string goal = 5;
+    string context_ref = 6;
+    uint64 start_ts = 7;
+    uint64 end_ts = 8;
+    SessionState state = 9;
+    int64 budget_token = 10;
+    int64 budget_time_ms = 11;
+    map<string, string> metadata = 12;
+}
+
+// MemoryType 记忆类型
+enum MemoryType {
+    MEMORY_UNKNOWN = 0;
+    EPISODIC = 1;
+    SEMANTIC = 2;
+    PROCEDURAL = 3;
+    SOCIAL = 4;
+    REFLECTIVE = 5;
+}
+
+// MemoryLevel 记忆蒸馏层级
+enum MemoryLevel {
+    LEVEL_UNKNOWN = 0;
+    LEVEL_RAW = 1;
+    LEVEL_SUMMARY = 2;
+    LEVEL_PATTERN = 3;
+}
+
+// MemoryState 记忆状态
+enum MemoryState {
+    MEMORY_STATE_UNKNOWN = 0;
+    MEMORY_ACTIVE = 1;
+    MEMORY_FADING = 2;
+    MEMORY_ARCHIVED = 3;
+    MEMORY_QUARANTINED = 4;
+    MEMORY_DELETED = 5;
+}
+
+// MemoryInfo 存储在etcd中的Memory元数据（不包含实际内容）
+message MemoryInfo {
+    string memory_id = 1;
+    MemoryType memory_type = 2;
+    string agent_id = 3;
+    string session_id = 4;
+    string scope = 5;
+    MemoryLevel level = 6;
+    string summary = 7;
+    repeated string source_event_ids = 8;
+    float confidence = 9;
+    float importance = 10;
+    float freshness_score = 11;
+    int64 ttl = 12;
+    uint64 valid_from = 13;
+    uint64 valid_to = 14;
+    string provenance_ref = 15;
+    int64 version = 16;
+    bool is_active = 17;
+    MemoryState state = 18;
+    uint64 created_ts = 19;
+    uint64 updated_ts = 20;
+    map<string, string> metadata = 21;
+    string embedding_ref = 22;
+    int64 collection_id = 23;  // 存储实际向量的Milvus collection
+    int64 partition_id = 24;   // 存储实际向量的Milvus partition
+}
+
+// MemoryPolicyInfo 存储在etcd中的Memory策略
+message MemoryPolicyInfo {
+    string memory_id = 1;
+    float salience_weight = 2;
+    int64 ttl = 3;
+    string decay_fn = 4;
+    float confidence = 5;
+    bool verified = 6;
+    string verified_by = 7;
+    uint64 verified_at = 8;
+    bool quarantined = 9;
+    string quarantine_reason = 10;
+    string visibility_policy = 11;
+    repeated string read_acl = 12;
+    repeated string write_acl = 13;
+    repeated string derive_acl = 14;
+    string policy_reason = 15;
+    string policy_source = 16;
+    string policy_event_id = 17;
+    uint64 created_ts = 18;
+    uint64 updated_ts = 19;
+}
+
+// StateInfo 存储在etcd中的State信息
+message StateInfo {
+    string state_id = 1;
+    string agent_id = 2;
+    string session_id = 3;
+    string state_type = 4;
+    string state_key = 5;
+    int64 version = 6;
+    string derived_from_event_id = 7;
+    uint64 checkpoint_ts = 8;
+    uint64 created_ts = 9;
+    uint64 updated_ts = 10;
+    map<string, string> metadata = 11;
+    string storage_ref = 12;  // 实际状态值的存储位置
+}
+
+// ArtifactInfo 存储在etcd中的Artifact元数据
+message ArtifactInfo {
+    string artifact_id = 1;
+    string session_id = 2;
+    string owner_agent_id = 3;
+    string artifact_type = 4;
+    string uri = 5;
+    string content_ref = 6;
+    string mime_type = 7;
+    map<string, string> metadata = 8;
+    string hash = 9;
+    string produced_by_event_id = 10;
+    int64 version = 11;
+    uint64 created_ts = 12;
+}
+
+// RelationInfo 存储在etcd中的Relation信息
+message RelationInfo {
+    string edge_id = 1;
+    string src_object_id = 2;
+    string src_type = 3;
+    string dst_object_id = 4;
+    string dst_type = 5;
+    string relation_type = 6;
+    float weight = 7;
+    map<string, string> properties = 8;
+    uint64 created_ts = 9;
+    string created_by_event_id = 10;
+}
+
+// ShareContractInfo 存储在etcd中的ShareContract
+message ShareContractInfo {
+    string contract_id = 1;
+    string scope = 2;
+    string owner_agent_id = 3;
+    repeated string read_acl = 4;
+    repeated string write_acl = 5;
+    repeated string derive_acl = 6;
+    int64 ttl_policy = 7;
+    int32 consistency_level = 8;  // ConsistencyLevel
+    int32 merge_policy = 9;       // MergePolicy
+    bool quarantine_enabled = 10;
+    string quarantine_policy = 11;
+    bool audit_enabled = 12;
+    string audit_policy = 13;
+    map<string, string> metadata = 14;
+    uint64 created_ts = 15;
+    uint64 updated_ts = 16;
+    string created_by_event_id = 17;
+}
+
+// EventLogInfo 存储在etcd中的Event Log元数据
+message EventLogInfo {
+    string channel_name = 1;
+    uint64 start_log_id = 2;
+    uint64 end_log_id = 3;
+    uint64 start_timestamp = 4;
+    uint64 end_timestamp = 5;
+    string storage_path = 6;
+    int64 segment_count = 7;
+}
+
+// MemoryIndexInfo 存储在etcd中的Memory索引信息
+message MemoryIndexInfo {
+    int64 collection_id = 1;
+    int64 partition_id = 2;
+    int64 field_id = 3;
+    int64 index_id = 4;
+    int64 build_id = 5;
+    bool enable_index = 6;
+    uint64 create_time = 7;
+    string index_type = 8;
+    map<string, string> index_params = 9;
+}
+
+// AgentWorkspace 工作空间信息
+message AgentWorkspace {
+    string workspace_id = 1;
+    string tenant_id = 2;
+    string name = 3;
+    string description = 4;
+    repeated string agent_ids = 5;
+    map<string, string> metadata = 6;
+    uint64 created_ts = 7;
+    uint64 updated_ts = 8;
+}

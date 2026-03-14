@@ -1,0 +1,187 @@
+syntax = "proto3";
+package event.proto;
+option go_package="github.com/milvus-io/milvus/pkg/v2/proto/eventpb";
+
+import "common.proto";
+
+// EventType 定义事件类型
+enum EventType {
+    EVENT_UNKNOWN = 0;
+    
+    // 消息类事件
+    USER_MESSAGE = 1;
+    ASSISTANT_MESSAGE = 2;
+    
+    // 工具类事件
+    TOOL_CALL_ISSUED = 10;
+    TOOL_RESULT_RETURNED = 11;
+    
+    // 检索类事件
+    RETRIEVAL_EXECUTED = 20;
+    
+    // 记忆类事件
+    MEMORY_WRITE_REQUESTED = 30;
+    MEMORY_CONSOLIDATED = 31;
+    MEMORY_UPDATED = 32;
+    MEMORY_DELETED = 33;
+    
+    // 计划类事件
+    PLAN_UPDATED = 40;
+    PLAN_EXECUTED = 41;
+    
+    // 反思类事件
+    CRITIQUE_GENERATED = 50;
+    REFLECTION_CREATED = 51;
+    
+    // 任务类事件
+    TASK_STARTED = 60;
+    TASK_FINISHED = 61;
+    TASK_FAILED = 62;
+    
+    // 协作类事件
+    HANDOFF_OCCURRED = 70;
+    SHARED_MEMORY_ACCESSED = 71;
+    
+    // 系统类事件
+    SESSION_CREATED = 80;
+    SESSION_ENDED = 81;
+    AGENT_REGISTERED = 82;
+    AGENT_DEREGISTERED = 83;
+}
+
+// Event 系统事实来源
+message Event {
+    string event_id = 1;
+    string tenant_id = 2;
+    string workspace_id = 3;
+    string agent_id = 4;
+    string session_id = 5;
+    EventType event_type = 6;
+    
+    // 时间戳
+    uint64 event_time = 7;      // 事件实际发生时间
+    uint64 ingest_time = 8;     // 进入WAL时间
+    uint64 visible_time = 9;    // 对查询可见时间
+    uint64 logical_ts = 10;     // 逻辑时间戳
+    
+    // 因果关系
+    string parent_event_id = 11;
+    repeated string causal_refs = 12;
+    
+    // 内容
+    bytes payload = 13;
+    string source = 14;
+    
+    // 重要性
+    float importance = 15;
+    
+    // 可见性
+    string visibility = 16;
+    
+    // 版本
+    int64 version = 17;
+    
+    // 元数据
+    map<string, string> metadata = 18;
+}
+
+// EventBatch 事件批次
+message EventBatch {
+    repeated Event events = 1;
+    uint64 batch_timestamp = 2;
+    string batch_id = 3;
+}
+
+// EventFilter 事件过滤条件
+message EventFilter {
+    repeated string agent_ids = 1;
+    repeated string session_ids = 2;
+    repeated EventType event_types = 3;
+    uint64 start_time = 4;
+    uint64 end_time = 5;
+    float min_importance = 6;
+    float max_importance = 7;
+    map<string, string> metadata_filter = 8;
+}
+
+// AppendEventRequest 追加事件请求
+message AppendEventRequest {
+    string tenant_id = 1;
+    string workspace_id = 2;
+    string agent_id = 3;
+    string session_id = 4;
+    EventType event_type = 5;
+    bytes payload = 6;
+    float importance = 7;
+    string visibility = 8;
+    string parent_event_id = 9;
+    repeated string causal_refs = 10;
+    map<string, string> metadata = 11;
+}
+
+// AppendEventResponse 追加事件响应
+message AppendEventResponse {
+    common.Status status = 1;
+    string event_id = 2;
+    uint64 logical_ts = 3;
+}
+
+// GetEventRequest 获取事件请求
+message GetEventRequest {
+    string event_id = 1;
+}
+
+// GetEventResponse 获取事件响应
+message GetEventResponse {
+    common.Status status = 1;
+    Event event = 2;
+}
+
+// QueryEventsRequest 查询事件请求
+message QueryEventsRequest {
+    EventFilter filter = 1;
+    int64 limit = 2;
+    int64 offset = 3;
+    string order_by = 4;  // "time", "importance", "logical_ts"
+    bool ascending = 5;
+}
+
+// QueryEventsResponse 查询事件响应
+message QueryEventsResponse {
+    common.Status status = 1;
+    repeated Event events = 2;
+    int64 total_count = 3;
+}
+
+// SubscribeEventsRequest 订阅事件请求
+message SubscribeEventsRequest {
+    string subscriber_id = 1;
+    EventFilter filter = 2;
+    uint64 start_timestamp = 3;
+}
+
+// SubscribeEventsResponse 订阅事件响应（流式）
+message SubscribeEventsResponse {
+    oneof response {
+        Event event = 1;
+        common.Status status = 2;
+    }
+}
+
+// EventLogPosition 事件日志位置
+message EventLogPosition {
+    string channel_name = 1;
+    uint64 log_id = 2;
+    uint64 timestamp = 3;
+}
+
+// EventService 事件服务定义
+service EventService {
+    // 单次事件操作
+    rpc AppendEvent(AppendEventRequest) returns (AppendEventResponse);
+    rpc GetEvent(GetEventRequest) returns (GetEventResponse);
+    rpc QueryEvents(QueryEventsRequest) returns (QueryEventsResponse);
+    
+    // 流式订阅
+    rpc SubscribeEvents(SubscribeEventsRequest) returns (stream SubscribeEventsResponse);
+}

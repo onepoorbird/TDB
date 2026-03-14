@@ -1,0 +1,232 @@
+syntax = "proto3";
+package common.proto;
+option go_package="github.com/milvus-io/milvus/pkg/v2/proto/commonpb";
+
+// ErrorCode 错误码
+enum ErrorCode {
+    Success = 0;
+    UnexpectedError = 1;
+    ConnectFailed = 2;
+    PermissionDenied = 3;
+    CollectionNotFound = 4;
+    IllegalArgument = 5;
+    IllegalDimension = 7;
+    IllegalIndexType = 8;
+    IllegalCollectionName = 9;
+    IllegalTOPK = 10;
+    IllegalRowRecord = 11;
+    IllegalVectorID = 12;
+    IllegalSearchResult = 13;
+    FileNotFound = 14;
+    MetaFailed = 15;
+    CacheFailed = 16;
+    CannotCreateFolder = 17;
+    CannotCreateFile = 18;
+    CannotDeleteFolder = 19;
+    CannotDeleteFile = 20;
+    BuildIndexError = 21;
+    IllegalNLIST = 22;
+    IllegalMetricType = 23;
+    OutOfMemory = 24;
+    IndexNotExist = 25;
+    EmptyCollection = 26;
+    UpdateImportTaskFailure = 27;
+    CollectionNameNotFound = 28;
+    CreateCredentialFailure = 29;
+    UpdateCredentialFailure = 30;
+    DeleteCredentialFailure = 31;
+    GetCredentialFailure = 32;
+    ListCredUsersFailure = 33;
+    GetUserFailure = 34;
+    CreateRoleFailure = 35;
+    DropRoleFailure = 36;
+    OperateUserRoleFailure = 37;
+    SelectRoleFailure = 38;
+    SelectUserFailure = 39;
+    SelectResourceFailure = 40;
+    OperatePrivilegeFailure = 41;
+    SelectGrantFailure = 42;
+    RefreshPolicyInfoCacheFailure = 43;
+    ListPolicyFailure = 44;
+    NotShardLeader = 45;
+    NoReplicaAvailable = 46;
+    SegmentNotFound = 47;
+    ForceDeny = 48;
+    RateLimit = 49;
+    NodeIDNotMatch = 50;
+    UpsertAutoIDTrue = 51;
+    InsufficientMemoryToLoad = 52;
+    MemoryQuotaExhausted = 53;
+    DiskQuotaExhausted = 54;
+    TimeTickLongDelay = 55;
+    NotFoundTSafer = 56;
+    DenyToRewrite = 57;
+    InvalidPassword = 58;
+    DDRequestRace = 59;
+
+    // internal error code for DC
+    DCNotReady = 100;
+
+    // internal error code for DN
+    DNNotReady = 101;
+
+    // internal error code for CGO
+    CGOError = 102;
+}
+
+// Status 状态信息
+message Status {
+    ErrorCode error_code = 1;
+    string reason = 2;
+    int32 code = 3;
+}
+
+// KeyValuePair 键值对
+message KeyValuePair {
+    string key = 1;
+    string value = 2;
+}
+
+// KeyDataPair 键数据对
+message KeyDataPair {
+    string key = 1;
+    bytes data = 2;
+}
+
+// Blob 二进制数据
+message Blob {
+    bytes value = 1;
+}
+
+// PlaceholderValue 占位符值
+message PlaceholderValue {
+    string tag = 1;
+    bytes value = 2;
+}
+
+// PlaceholderGroup 占位符组
+message PlaceholderGroup {
+    repeated PlaceholderValue placeholders = 1;
+}
+
+// Address 地址信息
+message Address {
+    string ip = 1;
+    int64 port = 2;
+}
+
+// MsgBase 消息基础信息
+message MsgBase {
+    int64 msg_type = 1;
+    int64 msgID = 2;
+    uint64 timestamp = 3;
+    int64 sourceID = 4;
+}
+
+// MsgHeader 消息头
+message MsgHeader {
+    MsgBase base = 1;
+}
+
+// DMLMsgHeader DML消息头
+message DMLMsgHeader {
+    MsgBase base = 1;
+    string shardName = 2;
+}
+
+// ConsistencyLevel 一致性级别
+enum ConsistencyLevel {
+    Strong = 0;
+    Session = 1;
+    Bounded = 2;
+    Eventually = 3;
+    Customized = 4;
+}
+
+// CompactionState 压缩状态
+enum CompactionState {
+    UndefiedState = 0;
+    Executing = 1;
+    Completed = 2;
+}
+
+// SegmentState Segment状态
+enum SegmentState {
+    SegmentStateNone = 0;
+    NotExist = 1;
+    Growing = 2;
+    Sealed = 3;
+    Flushed = 4;
+    Flushing = 5;
+    Dropped = 6;
+    Importing = 7;
+}
+
+// ImportState 导入状态
+enum ImportState {
+    ImportPending = 0;
+    ImportFailed = 1;
+    ImportStarted = 2;
+    ImportPersisted = 5;
+    ImportCompleted = 6;
+    ImportFailedAndCleaned = 7;
+}
+
+// ObjectType 对象类型
+enum ObjectType {
+    Collection = 0;
+    Global = 1;
+    User = 2;
+    ObjectTypeCount = 3;
+}
+
+// ObjectPrivilege 对象权限
+enum ObjectPrivilege {
+    PrivilegeAll = 0;
+    PrivilegeCreate = 1;
+    PrivilegeDrop = 2;
+    PrivilegeAlter = 3;
+    PrivilegeRead = 4;
+    PrivilegeLoad = 5;
+    PrivilegeRelease = 6;
+    PrivilegeCompact = 7;
+    PrivilegeInsert = 8;
+    PrivilegeDelete = 9;
+    PrivilegeGetStatistics = 10;
+    PrivilegeCreateIndex = 11;
+    PrivilegeIndexDetail = 12;
+    PrivilegeDropIndex = 13;
+    PrivilegeSearch = 14;
+    PrivilegeFlush = 15;
+    PrivilegeQuery = 16;
+    PrivilegeLoadBalance = 17;
+    PrivilegeImport = 18;
+    PrivilegeBackup = 19;
+    PrivilegeRestore = 20;
+    PrivilegeListIndexes = 21;
+    PrivilegeCreateDatabase = 22;
+    PrivilegeDropDatabase = 23;
+    PrivilegeListDatabases = 24;
+    PrivilegeDescribeDatabase = 25;
+    PrivilegeAlterDatabase = 26;
+    PrivilegeDescribeCollection = 27;
+    PrivilegeCount = 28;
+}
+
+// StateCode 状态码
+enum StateCode {
+    Initializing = 0;
+    Healthy = 1;
+    Abnormal = 2;
+    StandBy = 3;
+    Stopping = 4;
+}
+
+// LoadState 加载状态
+enum LoadState {
+    LoadStateNotExist = 0;
+    LoadStateNotLoad = 1;
+    LoadStateLoading = 2;
+    LoadStateLoaded = 3;
+    LoadStateUnloading = 4;
+}

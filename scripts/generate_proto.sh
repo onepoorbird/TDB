@@ -63,6 +63,9 @@ mkdir -p ./planpb
 mkdir -p ./workerpb
 mkdir -p ./messagespb
 mkdir -p ./streamingpb
+mkdir -p ./memorypb
+mkdir -p ./eventpb
+mkdir -p ./agentpb
 mkdir -p $ROOT_DIR/cmd/tools/migration/legacy/legacypb
 
 protoc_opt="${PROTOC_BIN} --proto_path=${API_PROTO_DIR} --proto_path=."
@@ -83,6 +86,11 @@ ${protoc_opt} --go_out=paths=source_relative:./clusteringpb --go-grpc_out=requir
 ${protoc_opt} --go_out=paths=source_relative:./messagespb --go-grpc_out=require_unimplemented_servers=false,paths=source_relative:./messagespb messages.proto || { echo 'generate messages.proto failed'; exit 1; }
 ${protoc_opt} --go_out=paths=source_relative:./streamingpb --go-grpc_out=require_unimplemented_servers=false,paths=source_relative:./streamingpb streaming.proto || { echo 'generate streamingpb.proto failed'; exit 1; }
 ${protoc_opt} --go_out=paths=source_relative:./workerpb --go-grpc_out=require_unimplemented_servers=false,paths=source_relative:./workerpb worker.proto|| { echo 'generate worker.proto failed'; exit 1; }
+
+# TDB proto files
+${protoc_opt} --go_out=paths=source_relative:./agentpb --go-grpc_out=require_unimplemented_servers=false,paths=source_relative:./agentpb agent.proto || { echo 'generate agent.proto failed'; exit 1; }
+${protoc_opt} --go_out=paths=source_relative:./memorypb --go-grpc_out=require_unimplemented_servers=false,paths=source_relative:./memorypb memory.proto || { echo 'generate memory.proto failed'; exit 1; }
+${protoc_opt} --go_out=paths=source_relative:./eventpb --go-grpc_out=require_unimplemented_servers=false,paths=source_relative:./eventpb event.proto || { echo 'generate event.proto failed'; exit 1; }
 
 ${protoc_opt} --proto_path=$ROOT_DIR/pkg/eventlog/ --go_out=paths=source_relative:../../pkg/eventlog/ --go-grpc_out=require_unimplemented_servers=false,paths=source_relative:../../pkg/eventlog/ event_log.proto || { echo 'generate event_log.proto failed'; exit 1; }
 ${protoc_opt} --proto_path=$ROOT_DIR/cmd/tools/migration/backend --go_out=paths=source_relative:../../cmd/tools/migration/backend/ --go-grpc_out=require_unimplemented_servers=false,paths=source_relative:../../cmd/tools/migration/backend backup_header.proto || { echo 'generate backup_header.proto failed'; exit 1; }

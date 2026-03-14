@@ -1,0 +1,190 @@
+syntax = "proto3";
+package agent.proto;
+option go_package="github.com/milvus-io/milvus/pkg/v2/proto/agentpb";
+
+import "common.proto";
+
+// AgentState 定义Agent的状态
+enum AgentState {
+    AGENT_UNKNOWN = 0;
+    AGENT_CREATING = 1;
+    AGENT_ACTIVE = 2;
+    AGENT_PAUSED = 3;
+    AGENT_TERMINATED = 4;
+}
+
+// Agent 表示执行主体
+message AgentInfo {
+    string agent_id = 1;
+    string tenant_id = 2;
+    string workspace_id = 3;
+    string agent_type = 4;
+    string role_profile = 5;
+    string policy_ref = 6;
+    repeated string capability_set = 7;
+    string default_memory_policy = 8;
+    uint64 created_ts = 9;
+    uint64 updated_ts = 10;
+    AgentState state = 11;
+    map<string, string> metadata = 12;
+}
+
+// SessionState 定义Session的状态
+enum SessionState {
+    SESSION_UNKNOWN = 0;
+    SESSION_CREATING = 1;
+    SESSION_ACTIVE = 2;
+    SESSION_PAUSED = 3;
+    SESSION_COMPLETED = 4;
+    SESSION_FAILED = 5;
+}
+
+// Session 表示具体任务、会话或推理线程
+message SessionInfo {
+    string session_id = 1;
+    string agent_id = 2;
+    string parent_session_id = 3;
+    string task_type = 4;
+    string goal = 5;
+    string context_ref = 6;
+    uint64 start_ts = 7;
+    uint64 end_ts = 8;
+    SessionState state = 9;
+    int64 budget_token = 10;
+    int64 budget_time_ms = 11;
+    map<string, string> metadata = 12;
+}
+
+// CreateAgentRequest 创建Agent请求
+message CreateAgentRequest {
+    string tenant_id = 1;
+    string workspace_id = 2;
+    string agent_type = 3;
+    string role_profile = 4;
+    repeated string capability_set = 5;
+    string default_memory_policy = 6;
+    map<string, string> metadata = 7;
+}
+
+// CreateAgentResponse 创建Agent响应
+message CreateAgentResponse {
+    common.Status status = 1;
+    string agent_id = 2;
+}
+
+// GetAgentRequest 获取Agent请求
+message GetAgentRequest {
+    string agent_id = 1;
+}
+
+// GetAgentResponse 获取Agent响应
+message GetAgentResponse {
+    common.Status status = 1;
+    AgentInfo agent = 2;
+}
+
+// ListAgentsRequest 列出Agent请求
+message ListAgentsRequest {
+    string tenant_id = 1;
+    string workspace_id = 2;
+    string agent_type = 3;
+}
+
+// ListAgentsResponse 列出Agent响应
+message ListAgentsResponse {
+    common.Status status = 1;
+    repeated AgentInfo agents = 2;
+}
+
+// UpdateAgentRequest 更新Agent请求
+message UpdateAgentRequest {
+    string agent_id = 1;
+    string role_profile = 2;
+    repeated string capability_set = 3;
+    string default_memory_policy = 4;
+    map<string, string> metadata = 5;
+}
+
+// UpdateAgentResponse 更新Agent响应
+message UpdateAgentResponse {
+    common.Status status = 1;
+}
+
+// DeleteAgentRequest 删除Agent请求
+message DeleteAgentRequest {
+    string agent_id = 1;
+}
+
+// DeleteAgentResponse 删除Agent响应
+message DeleteAgentResponse {
+    common.Status status = 1;
+}
+
+// CreateSessionRequest 创建Session请求
+message CreateSessionRequest {
+    string agent_id = 1;
+    string parent_session_id = 2;
+    string task_type = 3;
+    string goal = 4;
+    string context_ref = 5;
+    int64 budget_token = 6;
+    int64 budget_time_ms = 7;
+    map<string, string> metadata = 8;
+}
+
+// CreateSessionResponse 创建Session响应
+message CreateSessionResponse {
+    common.Status status = 1;
+    string session_id = 2;
+}
+
+// GetSessionRequest 获取Session请求
+message GetSessionRequest {
+    string session_id = 1;
+}
+
+// GetSessionResponse 获取Session响应
+message GetSessionResponse {
+    common.Status status = 1;
+    SessionInfo session = 2;
+}
+
+// ListSessionsRequest 列出Session请求
+message ListSessionsRequest {
+    string agent_id = 1;
+    string parent_session_id = 2;
+    SessionState state = 3;
+}
+
+// ListSessionsResponse 列出Session响应
+message ListSessionsResponse {
+    common.Status status = 1;
+    repeated SessionInfo sessions = 2;
+}
+
+// UpdateSessionRequest 更新Session请求
+message UpdateSessionRequest {
+    string session_id = 1;
+    SessionState state = 2;
+    string goal = 3;
+    map<string, string> metadata = 4;
+}
+
+// UpdateSessionResponse 更新Session响应
+message UpdateSessionResponse {
+    common.Status status = 1;
+}
+
+// AgentService Agent服务定义
+service AgentService {
+    rpc CreateAgent(CreateAgentRequest) returns (CreateAgentResponse);
+    rpc GetAgent(GetAgentRequest) returns (GetAgentResponse);
+    rpc ListAgents(ListAgentsRequest) returns (ListAgentsResponse);
+    rpc UpdateAgent(UpdateAgentRequest) returns (UpdateAgentResponse);
+    rpc DeleteAgent(DeleteAgentRequest) returns (DeleteAgentResponse);
+    
+    rpc CreateSession(CreateSessionRequest) returns (CreateSessionResponse);
+    rpc GetSession(GetSessionRequest) returns (GetSessionResponse);
+    rpc ListSessions(ListSessionsRequest) returns (ListSessionsResponse);
+    rpc UpdateSession(UpdateSessionRequest) returns (UpdateSessionResponse);
+}
