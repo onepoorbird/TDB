@@ -1,0 +1,88 @@
+name: Unit Test
+
+# This workflow is triggered on pushes or pull request to the repository.
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    # File paths to consider in the event. Optional; defaults to all.
+    paths:
+      - "include/**"
+      - "python/**"
+      - "src/**"
+      - "thirdparty/**"
+      - "benchmark/**"
+      - "cmake/**"
+      - "!cmake/libs/libcardinal.cmake"
+      - ".github/workflows/ut.yaml"
+      - "CMakeLists.txt"
+      - "!**.md"
+      - "tests/**"
+
+jobs:
+  ut:
+    name: ut on ubuntu-22.04
+    runs-on: self-hosted
+    timeout-minutes: 180
+    strategy:
+      fail-fast: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: 'none'
+      - name: Install Dependency
+        run: |
+          bash scripts/install_deps.sh
+          sudo pip3 install cmake==3.28.1
+      - name: Restore Cache
+        uses: ./.github/actions/cache-restore
+        with:
+          os: ubuntu-22.04
+      - name: Build
+        run: |
+          make WITH_UT=True WITH_ASAN=True
+          make test
+      - name: Save Cache
+        uses: ./.github/actions/cache-save
+        with:
+          os: ubuntu-22.04
+
+  swig-build:
+    name: python3 wheel
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: 'none'
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.8"
+      - name: Install Dependency
+        run: |
+          bash scripts/install_deps.sh
+          pip3 install pytest faiss-cpu
+      - name: Restore Cache
+        uses: ./.github/actions/cache-restore
+        with:
+          os: ubuntu-22.04
+      - name: Build
+        run: |
+          make
+      - name: Save Cache
+        uses: ./.github/actions/cache-save
+        with:
+          os: ubuntu-22.04
+      - name: Build Portable Wheel
+        run: |
+          cd python && ./build_portable_wheel.sh
+      - name: Install Wheel
+        run: |
+          cd python && pip3 install dist/*-manylinux*.whl
+      - name: Test
+        run: |
+          pytest tests/python/test_index_with_random.py

@@ -56,6 +56,8 @@ const (
 	MixCoordRole = "mixcoord"
 	// CDCRole is a constant represent CDC
 	CDCRole = "cdc"
+	// TDBRole is a constant represent TDB (Temporal Database)
+	TDBRole = "tdb"
 )
 
 var (
@@ -71,6 +73,7 @@ var (
 		StreamingNodeRole,
 		MixCoordRole,
 		CDCRole,
+		TDBRole,
 	)
 	serverTypeList = serverTypeSet.Collect()
 )

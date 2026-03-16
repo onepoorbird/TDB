@@ -1,0 +1,33 @@
+name: Analyzer
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  analyzer:
+    name: analyzer
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: 'none'
+      - name: Restore Cache
+        uses: ./.github/actions/cache-restore
+        with:
+          os: ubuntu-22.04
+      - name: Install Dependency
+        run: bash scripts/install_deps.sh
+      - name: Build & Analyzer
+        run: |
+          make WITH_UT=True \
+          && find src -type f | grep -E "\.cc$" | xargs /usr/bin/run-clang-tidy-14.py -quiet -p=./build/Release
+      - name: Save Cache
+        uses: ./.github/actions/cache-save
+        with:
+          os: ubuntu-22.04

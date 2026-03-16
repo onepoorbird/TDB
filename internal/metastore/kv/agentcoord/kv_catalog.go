@@ -6,12 +6,16 @@ import (
 	"fmt"
 
 	"github.com/cockroachdb/errors"
+	"go.uber.org/zap"
 
 	"github.com/milvus-io/milvus/pkg/v2/kv"
 	"github.com/milvus-io/milvus/pkg/v2/log"
 	"github.com/milvus-io/milvus/pkg/v2/models"
 	"github.com/milvus-io/milvus/pkg/v2/util/typeutil"
 )
+
+// ErrKeyNotFound is returned when a key is not found in the catalog.
+var ErrKeyNotFound = errors.New("key not found")
 
 // Catalog provides access to agent metadata stored in etcd.
 type Catalog struct {
@@ -41,7 +45,7 @@ func (c *Catalog) GetAgent(ctx context.Context, agentID string, ts typeutil.Time
 	key := BuildAgentKey(agentID)
 	value, err := c.Snapshot.Load(ctx, key, ts)
 	if err != nil {
-		if errors.Is(err, kv.ErrKeyNotFound) {
+		if errors.Is(err, ErrKeyNotFound) {
 			return nil, errors.Errorf("agent not found: %s", agentID)
 		}
 		return nil, errors.Wrap(err, "failed to load agent")
@@ -66,7 +70,7 @@ func (c *Catalog) ListAgents(ctx context.Context, tenantID, workspaceID string, 
 	for _, value := range values {
 		var agent models.Agent
 		if err := json.Unmarshal([]byte(value), &agent); err != nil {
-			log.Warn("failed to unmarshal agent", log.Error(err))
+			log.Warn("failed to unmarshal agent", zap.Error(err))
 			continue
 		}
 		agents = append(agents, &agent)
@@ -114,7 +118,7 @@ func (c *Catalog) GetSession(ctx context.Context, sessionID string, ts typeutil.
 	key := BuildSessionKey(sessionID)
 	value, err := c.Snapshot.Load(ctx, key, ts)
 	if err != nil {
-		if errors.Is(err, kv.ErrKeyNotFound) {
+		if errors.Is(err, ErrKeyNotFound) {
 			return nil, errors.Errorf("session not found: %s", sessionID)
 		}
 		return nil, errors.Wrap(err, "failed to load session")
@@ -139,7 +143,7 @@ func (c *Catalog) ListSessions(ctx context.Context, agentID string, ts typeutil.
 	for _, value := range values {
 		var session models.Session
 		if err := json.Unmarshal([]byte(value), &session); err != nil {
-			log.Warn("failed to unmarshal session", log.Error(err))
+			log.Warn("failed to unmarshal session", zap.Error(err))
 			continue
 		}
 		sessions = append(sessions, &session)
@@ -196,7 +200,7 @@ func (c *Catalog) GetWorkspace(ctx context.Context, workspaceID string, ts typeu
 	key := BuildWorkspaceKey(workspaceID)
 	value, err := c.Snapshot.Load(ctx, key, ts)
 	if err != nil {
-		if errors.Is(err, kv.ErrKeyNotFound) {
+		if errors.Is(err, ErrKeyNotFound) {
 			return nil, errors.Errorf("workspace not found: %s", workspaceID)
 		}
 		return nil, errors.Wrap(err, "failed to load workspace")
@@ -221,7 +225,7 @@ func (c *Catalog) ListWorkspaces(ctx context.Context, tenantID string, ts typeut
 	for _, value := range values {
 		var workspace models.Workspace
 		if err := json.Unmarshal([]byte(value), &workspace); err != nil {
-			log.Warn("failed to unmarshal workspace", log.Error(err))
+			log.Warn("failed to unmarshal workspace", zap.Error(err))
 			continue
 		}
 		workspaces = append(workspaces, &workspace)

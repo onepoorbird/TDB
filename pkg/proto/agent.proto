@@ -4,6 +4,8 @@ option go_package="github.com/milvus-io/milvus/pkg/v2/proto/agentpb";
 
 import "common.proto";
 
+import "google/protobuf/any.proto";
+
 // AgentState 定义Agent的状态
 enum AgentState {
     AGENT_UNKNOWN = 0;
@@ -68,7 +70,7 @@ message CreateAgentRequest {
 
 // CreateAgentResponse 创建Agent响应
 message CreateAgentResponse {
-    common.Status status = 1;
+    common.proto.Status status = 1;
     string agent_id = 2;
 }
 
@@ -79,7 +81,7 @@ message GetAgentRequest {
 
 // GetAgentResponse 获取Agent响应
 message GetAgentResponse {
-    common.Status status = 1;
+    common.proto.Status status = 1;
     AgentInfo agent = 2;
 }
 
@@ -92,7 +94,7 @@ message ListAgentsRequest {
 
 // ListAgentsResponse 列出Agent响应
 message ListAgentsResponse {
-    common.Status status = 1;
+    common.proto.Status status = 1;
     repeated AgentInfo agents = 2;
 }
 
@@ -107,7 +109,7 @@ message UpdateAgentRequest {
 
 // UpdateAgentResponse 更新Agent响应
 message UpdateAgentResponse {
-    common.Status status = 1;
+    common.proto.Status status = 1;
 }
 
 // DeleteAgentRequest 删除Agent请求
@@ -117,7 +119,7 @@ message DeleteAgentRequest {
 
 // DeleteAgentResponse 删除Agent响应
 message DeleteAgentResponse {
-    common.Status status = 1;
+    common.proto.Status status = 1;
 }
 
 // CreateSessionRequest 创建Session请求
@@ -134,7 +136,7 @@ message CreateSessionRequest {
 
 // CreateSessionResponse 创建Session响应
 message CreateSessionResponse {
-    common.Status status = 1;
+    common.proto.Status status = 1;
     string session_id = 2;
 }
 
@@ -145,7 +147,7 @@ message GetSessionRequest {
 
 // GetSessionResponse 获取Session响应
 message GetSessionResponse {
-    common.Status status = 1;
+    common.proto.Status status = 1;
     SessionInfo session = 2;
 }
 
@@ -158,7 +160,7 @@ message ListSessionsRequest {
 
 // ListSessionsResponse 列出Session响应
 message ListSessionsResponse {
-    common.Status status = 1;
+    common.proto.Status status = 1;
     repeated SessionInfo sessions = 2;
 }
 
@@ -172,7 +174,7 @@ message UpdateSessionRequest {
 
 // UpdateSessionResponse 更新Session响应
 message UpdateSessionResponse {
-    common.Status status = 1;
+    common.proto.Status status = 1;
 }
 
 // AgentService Agent服务定义

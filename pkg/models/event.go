@@ -21,7 +21,7 @@ const (
 	MemoryWriteRequested EventType = 30
 	MemoryConsolidated   EventType = 31
 	MemoryUpdated        EventType = 32
-	MemoryDeleted        EventType = 33
+	EventMemoryDeleted   EventType = 33
 
 	// 计划类事件
 	PlanUpdated  EventType = 40

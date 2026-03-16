@@ -91,6 +91,7 @@ type ComponentParam struct {
 	StreamingCfg   streamingConfig
 	FunctionCfg    functionConfig
 	CredentialCfg  credentialConfig
+	TDBCfg         tdbConfig
 
 	InternalTLSCfg InternalTLSConfig
 
@@ -101,6 +102,7 @@ type ComponentParam struct {
 	DataCoordGrpcServerCfg     GrpcServerConfig
 	DataNodeGrpcServerCfg      GrpcServerConfig
 	StreamingNodeGrpcServerCfg GrpcServerConfig
+	TDBGrpcServerCfg           GrpcServerConfig
 
 	RootCoordGrpcClientCfg      GrpcClientConfig
 	ProxyGrpcClientCfg          GrpcClientConfig
@@ -140,6 +142,7 @@ func (p *ComponentParam) init(bt *BaseTable) {
 	p.DataCoordCfg.init(bt)
 	p.DataNodeCfg.init(bt)
 	p.StreamingCfg.init(bt)
+	p.TDBCfg.init(bt)
 	p.HTTPCfg.init(bt)
 	p.LogCfg.init(bt)
 	p.RoleCfg.init(bt)
@@ -159,6 +162,7 @@ func (p *ComponentParam) init(bt *BaseTable) {
 	p.DataCoordGrpcServerCfg.Init("dataCoord", bt)
 	p.DataNodeGrpcServerCfg.Init("dataNode", bt)
 	p.StreamingNodeGrpcServerCfg.Init("streamingNode", bt)
+	p.TDBGrpcServerCfg.Init("tdb", bt)
 
 	p.RootCoordGrpcClientCfg.Init("rootCoord", bt)
 	p.ProxyGrpcClientCfg.Init("proxy", bt)
@@ -1765,6 +1769,33 @@ func (p *mixCoordConfig) init(base *BaseTable) {
 		FallbackKeys: []string{"rootCoord.enableActiveStandby"},
 	}
 	p.EnableActiveStandby.Init(base.mgr)
+}
+
+// /////////////////////////////////////////////////////////////////////////////
+// --- tdb ---
+type tdbConfig struct {
+	Enabled             ParamItem `refreshable:"false"`
+	GracefulStopTimeout ParamItem `refreshable:"true"`
+}
+
+func (p *tdbConfig) init(base *BaseTable) {
+	p.Enabled = ParamItem{
+		Key:          "tdb.enabled",
+		Version:      "2.6.0",
+		DefaultValue: "false",
+		Doc:          "Enable TDB (Temporal Database) component",
+		Export:       true,
+	}
+	p.Enabled.Init(base.mgr)
+
+	p.GracefulStopTimeout = ParamItem{
+		Key:          "tdb.gracefulStopTimeout",
+		Version:      "2.6.0",
+		DefaultValue: "5",
+		Doc:          "TDB graceful stop timeout in seconds",
+		Export:       true,
+	}
+	p.GracefulStopTimeout.Init(base.mgr)
 }
 
 // /////////////////////////////////////////////////////////////////////////////

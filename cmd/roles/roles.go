@@ -157,6 +157,7 @@ type MilvusRoles struct {
 	EnableQueryCoord    bool `env:"ENABLE_QUERY_COORD"`
 	EnableDataCoord     bool `env:"ENABLE_DATA_COORD"`
 	EnableCDC           bool `env:"ENABLE_CDC"`
+	EnableTDB           bool `env:"ENABLE_TDB"`
 	Local               bool
 	Alias               string
 	Embedded            bool
@@ -212,6 +213,10 @@ func (mr *MilvusRoles) runDataNode(ctx context.Context, localMsg bool) *conc.Fut
 
 func (mr *MilvusRoles) runCDC(ctx context.Context, localMsg bool) *conc.Future[component] {
 	return runComponent(ctx, localMsg, components.NewCDC, metrics.RegisterCDC)
+}
+
+func (mr *MilvusRoles) runTDB(ctx context.Context, localMsg bool) *conc.Future[component] {
+	return runComponent(ctx, localMsg, components.NewTDB, metrics.RegisterTDB)
 }
 
 // waitForAllComponentsReady waits for all components to be ready.
@@ -443,6 +448,7 @@ func (mr *MilvusRoles) Run() {
 		mr.EnableQueryCoord,
 		mr.EnableDataCoord,
 		mr.EnableCDC,
+		mr.EnableTDB,
 	}
 	enableComponents = lo.Filter(enableComponents, func(v bool, _ int) bool {
 		return v
@@ -514,6 +520,12 @@ func (mr *MilvusRoles) Run() {
 		paramtable.SetLocalComponentEnabled(typeutil.CDCRole)
 		cdc := mr.runCDC(ctx, local)
 		componentFutureMap[typeutil.CDCRole] = cdc
+	}
+
+	if mr.EnableTDB {
+		paramtable.SetLocalComponentEnabled(typeutil.TDBRole)
+		tdb := mr.runTDB(ctx, local)
+		componentFutureMap[typeutil.TDBRole] = tdb
 	}
 
 	componentMap, err := mr.waitForAllComponentsReady(cancel, componentFutureMap)

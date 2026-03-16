@@ -5,12 +5,16 @@ import (
 	"encoding/json"
 
 	"github.com/cockroachdb/errors"
+	"go.uber.org/zap"
 
 	"github.com/milvus-io/milvus/pkg/v2/kv"
 	"github.com/milvus-io/milvus/pkg/v2/log"
 	"github.com/milvus-io/milvus/pkg/v2/models"
 	"github.com/milvus-io/milvus/pkg/v2/util/typeutil"
 )
+
+// ErrKeyNotFound is returned when a key is not found in the catalog.
+var ErrKeyNotFound = errors.New("key not found")
 
 // Catalog provides access to memory metadata stored in etcd.
 type Catalog struct {
@@ -65,7 +69,7 @@ func (c *Catalog) ListMemories(ctx context.Context, agentID, sessionID string, t
 	for _, value := range values {
 		var memory models.Memory
 		if err := json.Unmarshal([]byte(value), &memory); err != nil {
-			log.Warn("failed to unmarshal memory", log.Error(err))
+			log.Warn("failed to unmarshal memory", zap.Error(err))
 			continue
 		}
 		memories = append(memories, &memory)
@@ -265,7 +269,7 @@ func (c *Catalog) ListStates(ctx context.Context, agentID, sessionID string, ts 
 	for _, value := range values {
 		var state models.State
 		if err := json.Unmarshal([]byte(value), &state); err != nil {
-			log.Warn("failed to unmarshal state", log.Error(err))
+			log.Warn("failed to unmarshal state", zap.Error(err))
 			continue
 		}
 		states = append(states, &state)
@@ -331,7 +335,7 @@ func (c *Catalog) ListArtifacts(ctx context.Context, sessionID string, ts typeut
 	for _, value := range values {
 		var artifact models.Artifact
 		if err := json.Unmarshal([]byte(value), &artifact); err != nil {
-			log.Warn("failed to unmarshal artifact", log.Error(err))
+			log.Warn("failed to unmarshal artifact", zap.Error(err))
 			continue
 		}
 		artifacts = append(artifacts, &artifact)
@@ -397,7 +401,7 @@ func (c *Catalog) ListRelations(ctx context.Context, objectID string, ts typeuti
 	for _, value := range values {
 		var relation models.Relation
 		if err := json.Unmarshal([]byte(value), &relation); err != nil {
-			log.Warn("failed to unmarshal relation", log.Error(err))
+			log.Warn("failed to unmarshal relation", zap.Error(err))
 			continue
 		}
 		relations = append(relations, &relation)
@@ -453,7 +457,7 @@ func (c *Catalog) ListShareContracts(ctx context.Context, scope string, ts typeu
 	for _, value := range values {
 		var contract models.ShareContract
 		if err := json.Unmarshal([]byte(value), &contract); err != nil {
-			log.Warn("failed to unmarshal share contract", log.Error(err))
+			log.Warn("failed to unmarshal share contract", zap.Error(err))
 			continue
 		}
 		contracts = append(contracts, &contract)

@@ -7,12 +7,16 @@ import (
 	"strconv"
 
 	"github.com/cockroachdb/errors"
+	"go.uber.org/zap"
 
 	"github.com/milvus-io/milvus/pkg/v2/kv"
 	"github.com/milvus-io/milvus/pkg/v2/log"
 	"github.com/milvus-io/milvus/pkg/v2/models"
 	"github.com/milvus-io/milvus/pkg/v2/util/typeutil"
 )
+
+// ErrKeyNotFound is returned when a key is not found in the catalog.
+var ErrKeyNotFound = errors.New("key not found")
 
 // Catalog provides access to event metadata stored in etcd.
 type Catalog struct {
@@ -53,7 +57,7 @@ func (c *Catalog) GetEvent(ctx context.Context, channelName string, logID uint64
 	key := BuildEventLogKey(channelName, logID)
 	value, err := c.Snapshot.Load(ctx, key, ts)
 	if err != nil {
-		if errors.Is(err, kv.ErrKeyNotFound) {
+		if errors.Is(err, ErrKeyNotFound) {
 			return nil, errors.Errorf("event not found: channel=%s, logID=%d", channelName, logID)
 		}
 		return nil, errors.Wrap(err, "failed to load event")
@@ -72,7 +76,7 @@ func (c *Catalog) GetEvents(ctx context.Context, channelName string, startLogID,
 	for logID := startLogID; logID <= endLogID; logID++ {
 		event, err := c.GetEvent(ctx, channelName, logID, ts)
 		if err != nil {
-			if errors.Is(err, kv.ErrKeyNotFound) {
+			if errors.Is(err, ErrKeyNotFound) {
 				continue
 			}
 			return nil, err
@@ -94,7 +98,7 @@ func (c *Catalog) ListEventsByTimeRange(ctx context.Context, channelName string,
 	for _, value := range values {
 		var event models.Event
 		if err := json.Unmarshal([]byte(value), &event); err != nil {
-			log.Warn("failed to unmarshal event", log.Error(err))
+			log.Warn("failed to unmarshal event", zap.Error(err))
 			continue
 		}
 		if event.EventTime >= startTime && event.EventTime <= endTime {
@@ -121,7 +125,7 @@ func (c *Catalog) GetEventMeta(ctx context.Context, eventID string, ts typeutil.
 	key := BuildEventMetaKey(eventID)
 	value, err := c.Snapshot.Load(ctx, key, ts)
 	if err != nil {
-		if errors.Is(err, kv.ErrKeyNotFound) {
+		if errors.Is(err, ErrKeyNotFound) {
 			return nil, nil
 		}
 		return nil, errors.Wrap(err, "failed to load event meta")
@@ -156,7 +160,7 @@ func (c *Catalog) GetChannel(ctx context.Context, channelName string, ts typeuti
 	key := BuildEventChannelKey(channelName)
 	value, err := c.Snapshot.Load(ctx, key, ts)
 	if err != nil {
-		if errors.Is(err, kv.ErrKeyNotFound) {
+		if errors.Is(err, ErrKeyNotFound) {
 			return nil, errors.Errorf("channel not found: %s", channelName)
 		}
 		return nil, errors.Wrap(err, "failed to load channel")
@@ -208,7 +212,7 @@ func (c *Catalog) GetSubscriber(ctx context.Context, subscriberID string, ts typ
 	key := BuildEventSubscriberKey(subscriberID)
 	value, err := c.Snapshot.Load(ctx, key, ts)
 	if err != nil {
-		if errors.Is(err, kv.ErrKeyNotFound) {
+		if errors.Is(err, ErrKeyNotFound) {
 			return nil, errors.Errorf("subscriber not found: %s", subscriberID)
 		}
 		return nil, errors.Wrap(err, "failed to load subscriber")
@@ -244,7 +248,7 @@ func (c *Catalog) GetPosition(ctx context.Context, subscriberID, channelName str
 	key := BuildEventPositionKey(subscriberID, channelName)
 	value, err := c.Snapshot.Load(ctx, key, ts)
 	if err != nil {
-		if errors.Is(err, kv.ErrKeyNotFound) {
+		if errors.Is(err, ErrKeyNotFound) {
 			return nil, nil
 		}
 		return nil, errors.Wrap(err, "failed to load position")
@@ -264,7 +268,7 @@ func (c *Catalog) GetNextLogID(ctx context.Context, channelName string) (uint64,
 	key := fmt.Sprintf("%s/%s/next_log_id", EventLogPrefix, channelName)
 	value, err := c.Txn.Load(ctx, key)
 	if err != nil {
-		if errors.Is(err, kv.ErrKeyNotFound) {
+		if errors.Is(err, ErrKeyNotFound) {
 			// First event, start from 1
 			if err := c.Txn.Save(ctx, key, "1"); err != nil {
 				return 0, errors.Wrap(err, "failed to initialize log ID")
@@ -292,7 +296,7 @@ func (c *Catalog) GetCurrentLogID(ctx context.Context, channelName string) (uint
 	key := fmt.Sprintf("%s/%s/next_log_id", EventLogPrefix, channelName)
 	value, err := c.Txn.Load(ctx, key)
 	if err != nil {
-		if errors.Is(err, kv.ErrKeyNotFound) {
+		if errors.Is(err, ErrKeyNotFound) {
 			return 0, nil
 		}
 		return 0, errors.Wrap(err, "failed to load log ID")
@@ -350,7 +354,7 @@ func (c *Catalog) QueryEvents(ctx context.Context, channelName string, filter *m
 	for _, value := range values {
 		var event models.Event
 		if err := json.Unmarshal([]byte(value), &event); err != nil {
-			log.Warn("failed to unmarshal event", log.Error(err))
+			log.Warn("failed to unmarshal event", zap.Error(err))
 			continue
 		}
 

@@ -3,7 +3,6 @@ package memory.proto;
 option go_package="github.com/milvus-io/milvus/pkg/v2/proto/memorypb";
 
 import "common.proto";
-import "schema.proto";
 
 // MemoryType 记忆类型
 enum MemoryType {
@@ -213,7 +212,7 @@ message CreateMemoryRequest {
 
 // CreateMemoryResponse 创建记忆响应
 message CreateMemoryResponse {
-    common.Status status = 1;
+    common.proto.Status status = 1;
     string memory_id = 2;
     uint64 version = 3;
 }
@@ -227,7 +226,7 @@ message GetMemoryRequest {
 
 // GetMemoryResponse 获取记忆响应
 message GetMemoryResponse {
-    common.Status status = 1;
+    common.proto.Status status = 1;
     Memory memory = 2;
     MemoryPolicy policy = 3;
     MemoryAdaptation adaptation = 4;
@@ -247,7 +246,7 @@ message UpdateMemoryRequest {
 
 // UpdateMemoryResponse 更新记忆响应
 message UpdateMemoryResponse {
-    common.Status status = 1;
+    common.proto.Status status = 1;
     uint64 new_version = 2;
 }
 
@@ -259,7 +258,7 @@ message DeleteMemoryRequest {
 
 // DeleteMemoryResponse 删除记忆响应
 message DeleteMemoryResponse {
-    common.Status status = 1;
+    common.proto.Status status = 1;
 }
 
 // MemoryFilter 记忆过滤条件
@@ -288,7 +287,7 @@ message QueryMemoriesRequest {
 
 // QueryMemoriesResponse 查询记忆响应
 message QueryMemoriesResponse {
-    common.Status status = 1;
+    common.proto.Status status = 1;
     repeated Memory memories = 2;
     int64 total_count = 3;
 }
@@ -312,7 +311,7 @@ message SearchResult {
 
 // SearchMemoriesResponse 向量搜索记忆响应
 message SearchMemoriesResponse {
-    common.Status status = 1;
+    common.proto.Status status = 1;
     repeated SearchResult results = 2;
 }
 
@@ -326,7 +325,7 @@ message GetRelationsRequest {
 
 // GetRelationsResponse 获取关系响应
 message GetRelationsResponse {
-    common.Status status = 1;
+    common.proto.Status status = 1;
     repeated Relation relations = 2;
 }
 
@@ -344,7 +343,7 @@ message CreateRelationRequest {
 
 // CreateRelationResponse 创建关系响应
 message CreateRelationResponse {
-    common.Status status = 1;
+    common.proto.Status status = 1;
     string edge_id = 2;
 }
 

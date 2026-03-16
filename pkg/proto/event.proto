@@ -121,7 +121,7 @@ message AppendEventRequest {
 
 // AppendEventResponse 追加事件响应
 message AppendEventResponse {
-    common.Status status = 1;
+    common.proto.Status status = 1;
     string event_id = 2;
     uint64 logical_ts = 3;
 }
@@ -133,7 +133,7 @@ message GetEventRequest {
 
 // GetEventResponse 获取事件响应
 message GetEventResponse {
-    common.Status status = 1;
+    common.proto.Status status = 1;
     Event event = 2;
 }
 
@@ -148,7 +148,7 @@ message QueryEventsRequest {
 
 // QueryEventsResponse 查询事件响应
 message QueryEventsResponse {
-    common.Status status = 1;
+    common.proto.Status status = 1;
     repeated Event events = 2;
     int64 total_count = 3;
 }
@@ -164,7 +164,7 @@ message SubscribeEventsRequest {
 message SubscribeEventsResponse {
     oneof response {
         Event event = 1;
-        common.Status status = 2;
+        common.proto.Status status = 2;
     }
 }
 
